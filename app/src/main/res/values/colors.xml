@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 color system -->
+    <color name="colorPrimaryLight">#6750A4</color>
+    <color name="colorOnPrimaryLight">#FFFFFF</color>
+    <color name="colorPrimaryContainerLight">#EADDFF</color>
+    <color name="colorOnPrimaryContainerLight">#21005D</color>
+
+    <color name="colorSecondaryLight">#625B71</color>
+    <color name="colorOnSecondaryLight">#FFFFFF</color>
+    <color name="colorSecondaryContainerLight">#E8DEF8</color>
+    <color name="colorOnSecondaryContainerLight">#1D192B</color>
+
+    <color name="colorTertiaryLight">#7D5260</color>
+    <color name="colorOnTertiaryLight">#FFFFFF</color>
+    <color name="colorTertiaryContainerLight">#FFD8E4</color>
+    <color name="colorOnTertiaryContainerLight">#31111D</color>
+
+    <color name="colorErrorLight">#B3261E</color>
+    <color name="colorOnErrorLight">#FFFFFF</color>
+    <color name="colorErrorContainerLight">#F9DEDC</color>
+    <color name="colorOnErrorContainerLight">#410E0B</color>
+
+    <color name="colorBackgroundLight">#FFFBFE</color>
+    <color name="colorOnBackgroundLight">#1C1B1F</color>
+    <color name="colorSurfaceLight">#FFFBFE</color>
+    <color name="colorOnSurfaceLight">#1C1B1F</color>
+    <color name="colorSurfaceVariantLight">#E7E0EC</color>
+    <color name="colorOnSurfaceVariantLight">#49454F</color>
+    <color name="colorOutlineLight">#79747E</color>
+
+    <!-- Dark theme colors -->
+    <color name="md_theme_dark_primary">#D0BCFF</color>
+    <color name="colorOnPrimaryDark">#381E72</color>
+    <color name="colorPrimaryContainerDark">#4F378B</color>
+    <color name="colorOnPrimaryContainerDark">#EADDFF</color>
+
+    <color name="colorSecondaryDark">#CCC2DC</color>
+    <color name="colorOnSecondaryDark">#332D41</color>
+    <color name="colorSecondaryContainerDark">#4A4458</color>
+    <color name="colorOnSecondaryContainerDark">#E8DEF8</color>
+
+    <color name="colorTertiaryDark">#EFB8C8</color>
+    <color name="colorOnTertiaryDark">#492532</color>
+    <color name="colorTertiaryContainerDark">#633B48</color>
+    <color name="colorOnTertiaryContainerDark">#FFD8E4</color>
+
+    <color name="colorErrorDark">#F2B8B5</color>
+    <color name="colorOnErrorDark">#601410</color>
+    <color name="colorErrorContainerDark">#8C1D18</color>
+    <color name="colorOnErrorContainerDark">#F9DEDC</color>
+
+    <color name="colorBackgroundDark">#1C1B1F</color>
+    <color name="colorOnBackgroundDark">#E6E1E5</color>
+    <color name="colorSurfaceDark">#1C1B1F</color>
+    <color name="colorOnSurfaceDark">#E6E1E5</color>
+    <color name="colorSurfaceVariantDark">#49454F</color>
+    <color name="colorOnSurfaceVariantDark">#CAC4D0</color>
+    <color name="colorOutlineDark">#938F99</color>
+
+    <!-- Default colors for AppCompat (used for backward compatibility) -->
+    <color name="colorPrimary">@color/colorPrimaryLight</color>
+    <color name="colorPrimaryDark">@color/colorPrimaryContainerLight</color>
+    <color name="colorAccent">@color/colorSecondaryLight</color>
+
+    <!-- Status colors -->
+    <color name="colorSuccess">#4CAF50</color>
+    <color name="colorError">#F44336</color>
+    <color name="colorWarning">#FF9800</color>
+    <color name="colorInfo">#2196F3</color>
+
+    <!-- AR Status colors -->
+    <color name="colorTracking">#4CAF50</color>
+    <color name="colorPaused">#FF9800</color>
+    <color name="colorStopped">#F44336</color>
+
+
+<!--    <color name="colorPrimary">#2196F3</color>-->
+<!--    <color name="colorPrimaryDark">#1976D2</color>-->
+<!--    <color name="colorAccent">#03A9F4</color>-->
+    <color name="colorSecondary">#673AB7</color>
+<!--    <color name="colorSuccess">#4CAF50</color>-->
+<!--    <color name="colorError">#F44336</color>-->
+</resources>

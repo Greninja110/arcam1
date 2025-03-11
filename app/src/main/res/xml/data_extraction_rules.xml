@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Include app preferences and settings -->
+        <include domain="sharedpref" path="."/>
+
+        <!-- Exclude sensitive data -->
+        <exclude domain="sharedpref" path="device.xml"/>
+        <exclude domain="file" path="media/"/>
+        <exclude domain="file" path="cache/"/>
+        <exclude domain="database" path="streaming.db"/>
+    </cloud-backup>
+
+    <device-transfer>
+        <!-- Include settings and preferences for device-to-device transfer -->
+        <include domain="sharedpref" path="."/>
+
+        <!-- Exclude large or sensitive data -->
+        <exclude domain="file" path="media/"/>
+        <exclude domain="file" path="cache/"/>
+    </device-transfer>
+</data-extraction-rules>

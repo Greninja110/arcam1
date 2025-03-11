@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-path
+        name="external_files"
+        path="Android/data/com.arcamerastreamer/files/Pictures" />
+    <external-path
+        name="external_storage_root"
+        path="." />
+    <files-path
+        name="internal_files"
+        path="." />
+    <cache-path
+        name="cache"
+        path="." />
+</paths>

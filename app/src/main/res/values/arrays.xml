@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Resolution options for streaming -->
+    <string-array name="resolution_options">
+        <item>@string/settings_quality_low</item>
+        <item>@string/settings_quality_medium</item>
+        <item>@string/settings_quality_high</item>
+    </string-array>
+
+    <!-- Protocol options for streaming -->
+    <string-array name="protocol_options">
+        <item>@string/settings_protocol_rtsp</item>
+        <item>@string/settings_protocol_webrtc</item>
+    </string-array>
+</resources>

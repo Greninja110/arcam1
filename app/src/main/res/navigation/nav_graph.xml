@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/streamingOptionsFragment">
+
+    <fragment
+        android:id="@+id/streamingOptionsFragment"
+        android:name="com.arcamerastreamer.ui.StreamingOptionsFragment"
+        android:label="@string/streaming_options_title"
+        tools:layout="@layout/fragment_streaming_options">
+        <action
+            android:id="@+id/action_to_cameraFragment"
+            app:destination="@id/cameraFragment"
+            app:popUpTo="@id/streamingOptionsFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/cameraFragment"
+        android:name="com.arcamerastreamer.ui.CameraFragment"
+        android:label="@string/camera_tab"
+        tools:layout="@layout/fragment_camera" />
+
+    <fragment
+        android:id="@+id/arControlsFragment"
+        android:name="com.arcamerastreamer.ui.ARControlsFragment"
+        android:label="@string/ar_tab"
+        tools:layout="@layout/fragment_ar_controls" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.arcamerastreamer.ui.SettingsFragment"
+        android:label="@string/settings_tab"
+        tools:layout="@layout/fragment_settings" />
+
+</navigation>
