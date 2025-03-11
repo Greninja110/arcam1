@@ -36,6 +36,8 @@ class ARCameraStreamerApplication : Application(), CameraXConfig.Provider {
 
         // Check ARCore availability
         checkARCoreAvailability()
+
+        Log.d(TAG, "Application initialized, ARCore available: $isARCoreAvailable")
     }
 
     /**

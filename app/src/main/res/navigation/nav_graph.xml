@@ -3,19 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/streamingOptionsFragment">
-
-    <fragment
-        android:id="@+id/streamingOptionsFragment"
-        android:name="com.arcamerastreamer.ui.StreamingOptionsFragment"
-        android:label="@string/streaming_options_title"
-        tools:layout="@layout/fragment_streaming_options">
-        <action
-            android:id="@+id/action_to_cameraFragment"
-            app:destination="@id/cameraFragment"
-            app:popUpTo="@id/streamingOptionsFragment"
-            app:popUpToInclusive="true" />
-    </fragment>
+    app:startDestination="@id/cameraFragment">
 
     <fragment
         android:id="@+id/cameraFragment"
@@ -24,10 +12,10 @@
         tools:layout="@layout/fragment_camera" />
 
     <fragment
-        android:id="@+id/arControlsFragment"
-        android:name="com.arcamerastreamer.ui.ARControlsFragment"
-        android:label="@string/ar_tab"
-        tools:layout="@layout/fragment_ar_controls" />
+        android:id="@+id/streamingOptionsFragment"
+        android:name="com.arcamerastreamer.ui.StreamingOptionsFragment"
+        android:label="@string/streaming_tab"
+        tools:layout="@layout/fragment_streaming_options" />
 
     <fragment
         android:id="@+id/settingsFragment"

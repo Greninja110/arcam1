@@ -9,7 +9,7 @@
 
     <TextView
         android:id="@+id/title"
-        style="@style/TextAppearance.Material3.HeadlineLarge"
+        style="@style/TextAppearance.MaterialComponents.Headline5"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
@@ -47,7 +47,7 @@
                 app:tint="?attr/colorPrimary" />
 
             <TextView
-                style="@style/TextAppearance.Material3.TitleLarge"
+                style="@style/TextAppearance.MaterialComponents.Headline6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
@@ -85,7 +85,7 @@
                 app:tint="?attr/colorPrimary" />
 
             <TextView
-                style="@style/TextAppearance.Material3.TitleLarge"
+                style="@style/TextAppearance.MaterialComponents.Headline6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
@@ -123,7 +123,7 @@
                 app:tint="?attr/colorPrimary" />
 
             <TextView
-                style="@style/TextAppearance.Material3.TitleLarge"
+                style="@style/TextAppearance.MaterialComponents.Headline6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
@@ -161,7 +161,7 @@
                 app:tint="?attr/colorPrimary" />
 
             <TextView
-                style="@style/TextAppearance.Material3.TitleLarge"
+                style="@style/TextAppearance.MaterialComponents.Headline6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
@@ -170,6 +170,44 @@
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
+
+    <!-- Resolution Options -->
+    <TextView
+        android:id="@+id/resolution_title"
+        style="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="@string/settings_streaming_quality"
+        app:layout_constraintTop_toBottomOf="@+id/option_video_audio" />
+
+    <RadioGroup
+        android:id="@+id/resolution_radio_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@+id/resolution_title">
+
+        <RadioButton
+            android:id="@+id/radio_resolution_low"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_quality_low" />
+
+        <RadioButton
+            android:id="@+id/radio_resolution_medium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="@string/settings_quality_medium" />
+
+        <RadioButton
+            android:id="@+id/radio_resolution_high"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_quality_high" />
+    </RadioGroup>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_start_streaming"
@@ -182,6 +220,6 @@
         app:cornerRadius="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/option_video_audio" />
+        app:layout_constraintTop_toBottomOf="@+id/resolution_radio_group" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

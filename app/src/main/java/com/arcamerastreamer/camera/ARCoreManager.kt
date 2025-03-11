@@ -40,7 +40,11 @@ class ARCoreManager(private val context: Context) {
      * Initialize the AR session
      */
     fun initializeARSession() {
-        if (ARCameraStreamerApplication.isARCoreAvailable) {
+        // Check if ARCore is available using the application instance
+        val appInstance = context.applicationContext as? ARCameraStreamerApplication
+        val isARCoreAvailable = appInstance?.let { it::class.java.getDeclaredField("isARCoreAvailable").get(it.javaClass.getField("Companion").get(null)) as? Boolean } ?: false
+
+        if (isARCoreAvailable) {
             try {
                 // Check if we already have a session
                 if (session == null) {
@@ -69,7 +73,18 @@ class ARCoreManager(private val context: Context) {
                     session?.configure(config)
 
                     // Store in application for global access
-                    ARCameraStreamerApplication.arSession = session
+                    try {
+                        val app = context.applicationContext as ARCameraStreamerApplication
+                        val companionField = app::class.java.getDeclaredField("Companion")
+                        companionField.isAccessible = true
+                        val companion = companionField.get(null)
+
+                        val arSessionField = companion.javaClass.getDeclaredField("arSession")
+                        arSessionField.isAccessible = true
+                        arSessionField.set(companion, session)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Could not store AR session in application: ${e.message}", e)
+                    }
 
                     isSessionInitialized = true
                     Log.d(TAG, "AR Session initialized, depth enabled: $depthEnabled")
@@ -158,7 +173,6 @@ class ARCoreManager(private val context: Context) {
 
             // Create AR Frame
             session?.let { arSession ->
-
                 // Create ARCore image using camera image
                 return arSession.update()
             }
@@ -297,7 +311,19 @@ class ARCoreManager(private val context: Context) {
             session?.close()
             session = null
             isSessionInitialized = false
-            ARCameraStreamerApplication.arSession = null
+
+            try {
+                val app = context.applicationContext as ARCameraStreamerApplication
+                val companionField = app::class.java.getDeclaredField("Companion")
+                companionField.isAccessible = true
+                val companion = companionField.get(null)
+
+                val arSessionField = companion.javaClass.getDeclaredField("arSession")
+                arSessionField.isAccessible = true
+                arSessionField.set(companion, null)
+            } catch (e: Exception) {
+                Log.e(TAG, "Could not clear AR session in application: ${e.message}", e)
+            }
         }
     }
 

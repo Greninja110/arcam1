@@ -1,12 +1,12 @@
 package com.arcamerastreamer.streaming
 
-import android.graphics.Bitmap
 import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.media.Image
 import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import com.arcamerastreamer.camera.ARCoreManager
 import fi.iki.elonen.NanoHTTPD
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -16,11 +16,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import android.graphics.YuvImage
-import android.graphics.Rect
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 
 /**
  * Streaming server implementation using NanoHTTPD
@@ -30,21 +25,15 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
     companion object {
         private const val TAG = "StreamingServer"
         private const val BOUNDARY = "mjpegboundary"
-        private const val JPEG_QUALITY = 85
+        private const val JPEG_QUALITY = 80
         private const val MJPEG_MIME = "multipart/x-mixed-replace;boundary=$BOUNDARY"
-        private const val CONTENT_TYPE_HEADER = "Content-Type"
-        private const val CACHE_CONTROL_HEADER = "Cache-Control"
-        private const val CONNECTION_HEADER = "Connection"
-        private const val BOUNDARY_START = "--$BOUNDARY\r\n"
-        private const val CONTENT_TYPE_MJPEG = "Content-Type: image/jpeg\r\n\r\n"
-        private const val BOUNDARY_END = "\r\n"
     }
 
     // Stream settings
     enum class StreamType {
         IMAGE_ONLY,
-        VIDEO_ONLY,
         AUDIO_ONLY,
+        VIDEO_ONLY,
         VIDEO_AUDIO
     }
 
@@ -68,15 +57,8 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
     private var latestJpegFrame = ByteArray(0)
     private val frameLock = ReentrantLock()
 
-    // AR Data
-    private var arDepthData: ARCoreManager.DepthData? = null
-    private val depthLock = ReentrantLock()
-
     // Connections tracking
     private val activeConnections = AtomicInteger(0)
-
-    // FPS calculation scheduler
-    private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
     /**
      * Start the streaming server
@@ -90,9 +72,6 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
         streamWidth = width
         streamHeight = height
         isStreaming.set(true)
-
-        // Start FPS calculation
-        startFpsCalculation()
 
         return try {
             start(NanoHTTPD.SOCKET_READ_TIMEOUT, false)
@@ -112,9 +91,6 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
         isStreaming.set(false)
         stop()
         Log.i(TAG, "Streaming server stopped")
-
-        // Stop FPS calculation
-        executor.shutdown()
     }
 
     /**
@@ -145,6 +121,7 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
 
                 // Increment frame count for FPS calculation
                 frameCount++
+                calculateFPS()
 
                 imageProxy.close()
             }
@@ -156,10 +133,10 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
      */
     private fun processImageFrame(image: Image, rotation: Int) {
         try {
-            // Only process JPEG for now
+            // Only process YUV images for now
             if (image.format == ImageFormat.YUV_420_888) {
                 val yuvImage = convertImageToYuvImage(image)
-                val jpegBytes = compressToJpeg(yuvImage, rotation)
+                val jpegBytes = compressToJpeg(yuvImage)
 
                 // Store the latest JPEG frame
                 frameLock.withLock {
@@ -188,7 +165,7 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
         // Copy Y
         yBuffer.get(nv21, 0, ySize)
 
-        // Copy VU (NV21 format interleaves V and U)
+        // Copy VU (NV21 format)
         vBuffer.get(nv21, ySize, vSize)
         uBuffer.get(nv21, ySize + vSize, uSize)
 
@@ -204,7 +181,7 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
     /**
      * Compress YuvImage to JPEG
      */
-    private fun compressToJpeg(yuvImage: YuvImage, rotation: Int): ByteArray {
+    private fun compressToJpeg(yuvImage: YuvImage): ByteArray {
         val out = ByteArrayOutputStream()
 
         // Compress to JPEG
@@ -218,30 +195,20 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
     }
 
     /**
-     * Start FPS calculation in a separate thread
+     * Calculate FPS
      */
-    private fun startFpsCalculation() {
-        executor.scheduleAtFixedRate({
-            val currentTime = System.currentTimeMillis()
-            val timeElapsed = currentTime - lastFpsTimestamp
+    private fun calculateFPS() {
+        val currentTime = System.currentTimeMillis()
+        val timeElapsed = currentTime - lastFpsTimestamp
 
-            if (timeElapsed >= 1000) {
-                // Convert Long to Int safely
-                val fps = ((frameCount * 1000) / timeElapsed).toInt()
-                currentFPS.set(fps)
+        if (timeElapsed >= 1000) {
+            // Calculate FPS - fix: convert to Int for AtomicInteger.set()
+            val fps = ((frameCount * 1000) / timeElapsed).toInt()
+            currentFPS.set(fps)
 
-                frameCount = 0
-                lastFpsTimestamp = currentTime
-            }
-        }, 0, 500, TimeUnit.MILLISECONDS)
-    }
-
-    /**
-     * Update depth data from ARCore
-     */
-    fun updateDepthData(depthData: ARCoreManager.DepthData) {
-        depthLock.withLock {
-            arDepthData = depthData
+            // Reset counters
+            frameCount = 0
+            lastFpsTimestamp = currentTime
         }
     }
 
@@ -267,21 +234,6 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
     }
 
     /**
-     * Update the streaming type
-     */
-    fun updateStreamType(type: StreamType) {
-        streamType = type
-    }
-
-    /**
-     * Update stream resolution
-     */
-    fun updateResolution(width: Int, height: Int) {
-        streamWidth = width
-        streamHeight = height
-    }
-
-    /**
      * Handle incoming HTTP requests
      */
     override fun serve(session: IHTTPSession): Response {
@@ -296,16 +248,6 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
             // Serve static image
             uri == "/image" && streamType == StreamType.IMAGE_ONLY -> {
                 serveStaticImage(session)
-            }
-
-            // Serve depth data as JSON
-            uri == "/depth" -> {
-                serveDepthData(session)
-            }
-
-            // Serve audio stream
-            uri == "/audio" && (streamType == StreamType.AUDIO_ONLY || streamType == StreamType.VIDEO_AUDIO) -> {
-                serveAudioStream(session)
             }
 
             // Serve status information as JSON
@@ -326,82 +268,15 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
     private fun serveVideoStream(session: IHTTPSession): Response {
         activeConnections.incrementAndGet()
 
-        // Create an input stream that will read from our frame buffer
-        val videoStreamSource = object : InputStream() {
-            private var boundary = BOUNDARY_START.toByteArray()
-            private var contentType = CONTENT_TYPE_MJPEG.toByteArray()
-            private var boundaryEnd = BOUNDARY_END.toByteArray()
-
-            private var currentFrame = ByteArray(0)
-            private var position = 0
-            private var frameState = 0 // 0: boundary, 1: content type, 2: jpeg data, 3: boundary end
-
-            override fun read(): Int {
-                try {
-                    when (frameState) {
-                        0 -> {
-                            if (position >= boundary.size) {
-                                position = 0
-                                frameState = 1
-                                return read()
-                            }
-                            return boundary[position++].toInt() and 0xFF
-                        }
-                        1 -> {
-                            if (position >= contentType.size) {
-                                position = 0
-                                frameState = 2
-                                // Get the latest frame
-                                frameLock.withLock {
-                                    currentFrame = latestJpegFrame
-                                }
-                                return read()
-                            }
-                            return contentType[position++].toInt() and 0xFF
-                        }
-                        2 -> {
-                            if (currentFrame.isEmpty() || position >= currentFrame.size) {
-                                position = 0
-                                frameState = 3
-                                return read()
-                            }
-                            return currentFrame[position++].toInt() and 0xFF
-                        }
-                        3 -> {
-                            if (position >= boundaryEnd.size) {
-                                position = 0
-                                frameState = 0
-                                // Sleep to control frame rate
-                                try {
-                                    Thread.sleep(33) // ~30 FPS
-                                } catch (e: InterruptedException) {
-                                    // Ignore
-                                }
-                                return read()
-                            }
-                            return boundaryEnd[position++].toInt() and 0xFF
-                        }
-                        else -> return -1
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error reading from stream", e)
-                    return -1
-                }
-            }
-
-            override fun close() {
-                super.close()
-                activeConnections.decrementAndGet()
-            }
-        }
+        val videoStreamSource = MJPEGInputStream()
 
         return newChunkedResponse(
             Response.Status.OK,
             MJPEG_MIME,
             videoStreamSource
         ).apply {
-            addHeader(CACHE_CONTROL_HEADER, "no-cache, no-store, must-revalidate")
-            addHeader(CONNECTION_HEADER, "close")
+            addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+            addHeader("Connection", "close")
         }
     }
 
@@ -418,7 +293,7 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
                 ByteArrayInputStream(jpegBytes),
                 jpegBytes.size.toLong()
             ).apply {
-                addHeader(CACHE_CONTROL_HEADER, "no-cache, no-store, must-revalidate")
+                addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
             }
         } else {
             newFixedLengthResponse(
@@ -427,53 +302,6 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
                 "No image available"
             )
         }
-    }
-
-    /**
-     * Serve depth data as JSON
-     */
-    private fun serveDepthData(session: IHTTPSession): Response {
-        val depthData = depthLock.withLock { arDepthData }
-
-        return if (depthData != null) {
-            // Simplified - in reality you would compress or encode this better
-            val jsonDepth = """
-                {
-                    "timestamp": ${depthData.timestamp},
-                    "width": ${depthData.width},
-                    "height": ${depthData.height},
-                    "depthData": "${android.util.Base64.encodeToString(depthData.depthData, android.util.Base64.DEFAULT)}",
-                    "confidenceData": "${depthData.confidenceData?.let { android.util.Base64.encodeToString(it, android.util.Base64.DEFAULT) }}"
-                }
-            """.trimIndent()
-
-            newFixedLengthResponse(
-                Response.Status.OK,
-                "application/json",
-                jsonDepth
-            ).apply {
-                addHeader(CACHE_CONTROL_HEADER, "no-cache, no-store, must-revalidate")
-            }
-        } else {
-            newFixedLengthResponse(
-                Response.Status.NOT_FOUND,
-                "application/json",
-                """{"error": "No depth data available"}"""
-            )
-        }
-    }
-
-    /**
-     * Serve audio stream (placeholder for now)
-     */
-    private fun serveAudioStream(session: IHTTPSession): Response {
-        // Audio streaming is complex and would require a separate implementation
-        // This is just a placeholder
-        return newFixedLengthResponse(
-            Response.Status.NOT_IMPLEMENTED,
-            "text/plain",
-            "Audio streaming not implemented yet"
-        )
     }
 
     /**
@@ -489,8 +317,7 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
                 "resolution": {
                     "width": $streamWidth,
                     "height": $streamHeight
-                },
-                "depthAvailable": ${arDepthData != null}
+                }
             }
         """.trimIndent()
 
@@ -499,7 +326,7 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
             "application/json",
             statusJson
         ).apply {
-            addHeader(CACHE_CONTROL_HEADER, "no-cache, no-store, must-revalidate")
+            addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
         }
     }
 
@@ -570,13 +397,11 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
                 <div class="container">
                     <div class="card">
                         <h1>AR Camera Streamer</h1>
-                        <p>This web interface allows you to view the camera stream and access various features.</p>
+                        <p>This web interface allows you to view the camera stream.</p>
                         
                         <div class="links">
                             <a class="link" href="/video" target="_blank">Video Stream</a>
                             <a class="link" href="/image" target="_blank">Static Image</a>
-                            <a class="link" href="/depth" target="_blank">Depth Data</a>
-                            <a class="link" href="/audio" target="_blank">Audio Stream</a>
                             <a class="link" href="/status" target="_blank">Server Status</a>
                         </div>
                     </div>
@@ -621,5 +446,80 @@ class StreamingServer(private val port: Int = 8080) : NanoHTTPD(port) {
         """.trimIndent()
 
         return newFixedLengthResponse(html)
+    }
+
+    /**
+     * Inner class for MJPEG streaming
+     */
+    inner class MJPEGInputStream : InputStream() {
+        private val BOUNDARY_BYTES = "--$BOUNDARY\r\n".toByteArray()
+        private val CONTENT_TYPE_BYTES = "Content-Type: image/jpeg\r\n\r\n".toByteArray()
+        private val BOUNDARY_END_BYTES = "\r\n".toByteArray()
+
+        private var currentFrame = ByteArray(0)
+        private var position = 0
+        private var frameState = 0 // 0: boundary, 1: content type, 2: jpeg data, 3: boundary end
+
+        init {
+            activeConnections.incrementAndGet()
+        }
+
+        override fun read(): Int {
+            try {
+                when (frameState) {
+                    0 -> {
+                        if (position >= BOUNDARY_BYTES.size) {
+                            position = 0
+                            frameState = 1
+                            return read()
+                        }
+                        return BOUNDARY_BYTES[position++].toInt() and 0xFF
+                    }
+                    1 -> {
+                        if (position >= CONTENT_TYPE_BYTES.size) {
+                            position = 0
+                            frameState = 2
+                            // Get the latest frame
+                            frameLock.withLock {
+                                currentFrame = latestJpegFrame
+                            }
+                            return read()
+                        }
+                        return CONTENT_TYPE_BYTES[position++].toInt() and 0xFF
+                    }
+                    2 -> {
+                        if (currentFrame.isEmpty() || position >= currentFrame.size) {
+                            position = 0
+                            frameState = 3
+                            return read()
+                        }
+                        return currentFrame[position++].toInt() and 0xFF
+                    }
+                    3 -> {
+                        if (position >= BOUNDARY_END_BYTES.size) {
+                            position = 0
+                            frameState = 0
+                            // Sleep to control frame rate
+                            try {
+                                Thread.sleep(33) // ~30 FPS
+                            } catch (e: InterruptedException) {
+                                // Ignore
+                            }
+                            return read()
+                        }
+                        return BOUNDARY_END_BYTES[position++].toInt() and 0xFF
+                    }
+                    else -> return -1
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error reading from stream", e)
+                return -1
+            }
+        }
+
+        override fun close() {
+            super.close()
+            activeConnections.decrementAndGet()
+        }
     }
 }

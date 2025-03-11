@@ -20,11 +20,9 @@ data class StreamingOptions(
     // Audio quality/bitrate
     var audioBitrate: Int = 128000, // 128 kbps
 
-    // Streaming protocol to use
-    var protocol: StreamProtocol = StreamProtocol.RTSP,
-
-    // Enable AR data in stream
-    var includeARData: Boolean = false,
+    // Resolution settings
+    var width: Int = 1280,
+    var height: Int = 720,
 
     // Maximum allowed connections
     var maxConnections: Int = 1
@@ -40,30 +38,28 @@ data class StreamingOptions(
         VIDEO_AUDIO
     }
 
-    /**
-     * Available streaming protocols
-     */
-    enum class StreamProtocol {
-        RTSP,
-        WEBRTC,
-        HTTP
-    }
-
+    // Add these quality presets to your StreamingOptions.kt file in the companion object
     companion object {
-        // Quality presets
+        // Quality presets with predefined resolutions
         val LOW_QUALITY = StreamingOptions(
             videoBitrate = 500000,  // 500 Kbps
-            audioBitrate = 64000    // 64 Kbps
+            audioBitrate = 64000,   // 64 Kbps
+            width = 640,
+            height = 480
         )
 
         val MEDIUM_QUALITY = StreamingOptions(
             videoBitrate = 2000000, // 2 Mbps
-            audioBitrate = 128000   // 128 Kbps
+            audioBitrate = 128000,  // 128 Kbps
+            width = 1280,
+            height = 720
         )
 
         val HIGH_QUALITY = StreamingOptions(
             videoBitrate = 4000000, // 4 Mbps
-            audioBitrate = 192000   // 192 Kbps
+            audioBitrate = 192000,  // 192 Kbps
+            width = 1920,
+            height = 1080
         )
     }
 }

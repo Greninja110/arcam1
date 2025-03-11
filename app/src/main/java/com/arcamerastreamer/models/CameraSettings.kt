@@ -16,10 +16,10 @@ data class CameraSettings(
     var fps: Int = 30,
 
     // Camera ID (front or back)
-    var lensFacing: Int = 0, // 0: Back, 1: Front
+    var lensFacing: Int = CAMERA_FACING_BACK,
 
     // Flash mode
-    var flashMode: Int = 0, // 0: Off, 1: On, 2: Auto
+    var flashMode: Int = FLASH_MODE_OFF,
 
     // Auto-focus enabled
     var autoFocus: Boolean = true,

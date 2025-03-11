@@ -16,12 +16,11 @@ object PermissionUtils {
      */
     fun getRequiredPermissions(): List<String> {
         val permissions = mutableListOf(
-            Manifest.permission.CAMERA,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.INTERNET,
-            Manifest.permission.ACCESS_NETWORK_STATE,
-            Manifest.permission.ACCESS_WIFI_STATE
+            Manifest.permission.CAMERA
         )
+
+        // Add audio permission
+        permissions.add(Manifest.permission.RECORD_AUDIO)
 
         // Add storage permissions for older Android versions
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
@@ -59,24 +58,6 @@ object PermissionUtils {
     }
 
     /**
-     * Get permissions needed for camera and audio
-     */
-    fun getCameraAndAudioPermissions(): List<String> {
-        val permissions = mutableListOf(
-            Manifest.permission.CAMERA,
-            Manifest.permission.RECORD_AUDIO
-        )
-
-        // Add storage permissions for older Android versions
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-            permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-        }
-
-        return permissions
-    }
-
-    /**
      * Check if all required permissions are granted
      */
     fun hasRequiredPermissions(context: Context): Boolean {
@@ -93,35 +74,6 @@ object PermissionUtils {
             context,
             Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    /**
-     * Check if audio permission is granted
-     */
-    fun hasAudioPermission(context: Context): Boolean {
-        return ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.RECORD_AUDIO
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    /**
-     * Check if storage permissions are granted
-     */
-    fun hasStoragePermissions(context: Context): Boolean {
-        // For Android 10 (API 29) and higher, scoped storage is used
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            return true
-        }
-
-        return ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                ) == PackageManager.PERMISSION_GRANTED
     }
 
     /**

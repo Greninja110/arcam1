@@ -7,5 +7,4 @@
     <!-- Exclude any sensitive or large data files -->
     <exclude domain="file" path="media/"/>
     <exclude domain="file" path="cache/"/>
-    <exclude domain="database" path="streaming.db"/>
 </full-backup-content>

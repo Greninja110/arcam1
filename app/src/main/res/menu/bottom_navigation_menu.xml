@@ -6,9 +6,9 @@
         android:title="@string/camera_tab" />
 
     <item
-        android:id="@+id/arControlsFragment"
-        android:icon="@drawable/ic_ar_controls"
-        android:title="@string/ar_tab" />
+        android:id="@+id/streamingOptionsFragment"
+        android:icon="@drawable/ic_video_only"
+        android:title="@string/streaming_tab" />
 
     <item
         android:id="@+id/settingsFragment"

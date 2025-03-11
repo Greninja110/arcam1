@@ -8,7 +8,6 @@
         <exclude domain="sharedpref" path="device.xml"/>
         <exclude domain="file" path="media/"/>
         <exclude domain="file" path="cache/"/>
-        <exclude domain="database" path="streaming.db"/>
     </cloud-backup>
 
     <device-transfer>

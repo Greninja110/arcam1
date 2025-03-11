@@ -12,16 +12,11 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.util.Size
-import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.arcamerastreamer.MainActivity
 import com.arcamerastreamer.R
-import com.arcamerastreamer.camera.ARCoreManager
-import com.arcamerastreamer.camera.CameraManager
 import com.arcamerastreamer.util.NetworkUtils
 import java.util.concurrent.Executors
 
@@ -57,24 +52,22 @@ class StreamingService : Service() {
     // Binder for local service interaction
     private val binder = LocalBinder()
 
-    // Camera components
-    private lateinit var cameraManager: CameraManager
-    private var arCoreManager: ARCoreManager? = null
-
     // Streaming server
     private var streamingServer: StreamingServer? = null
+
+    // Image analyzer
+    private var imageAnalyzer: ImageAnalysis? = null
 
     // Streaming settings
     private var streamType = StreamingServer.StreamType.VIDEO_ONLY
     private var streamResolution = Size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
     private var port = DEFAULT_PORT
-    private var enableAR = false
 
     // Service state
     private var isStreaming = false
 
-    // Camera executor
-    private val cameraExecutor = Executors.newSingleThreadExecutor()
+    // Executor for analysis
+    private val analyzerExecutor = Executors.newSingleThreadExecutor()
 
     /**
      * Binder class for client communication
@@ -86,9 +79,6 @@ class StreamingService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "Streaming service created")
-
-        // Initialize camera manager
-        cameraManager = CameraManager(applicationContext)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -106,7 +96,6 @@ class StreamingService : Service() {
                 streamResolution = Size(width, height)
 
                 port = intent.getIntExtra(EXTRA_PORT, DEFAULT_PORT)
-                enableAR = intent.getBooleanExtra(EXTRA_ENABLE_AR, false)
 
                 // Start streaming
                 startStreaming()
@@ -135,19 +124,19 @@ class StreamingService : Service() {
         }
 
         // Shutdown executor
-        cameraExecutor.shutdown()
+        analyzerExecutor.shutdown()
     }
 
     /**
      * Start the streaming process
      */
-    private fun startStreaming() {
+    fun startStreaming() {
         if (isStreaming) {
             Log.w(TAG, "Streaming is already active")
             return
         }
 
-        Log.i(TAG, "Starting streaming: type=$streamType, resolution=$streamResolution, AR=$enableAR")
+        Log.i(TAG, "Starting streaming: type=$streamType, resolution=$streamResolution")
 
         try {
             // Create and start streaming server
@@ -162,17 +151,6 @@ class StreamingService : Service() {
                 Log.e(TAG, "Failed to start streaming server")
                 stopSelf()
                 return
-            }
-
-            // Initialize AR if requested
-            if (enableAR) {
-                arCoreManager = ARCoreManager(applicationContext)
-                arCoreManager?.initializeARSession()
-
-                // Set up AR depth data listener
-                arCoreManager?.setOnDepthDataAvailableListener { depthData ->
-                    streamingServer?.updateDepthData(depthData)
-                }
             }
 
             // Start foreground service with notification
@@ -190,7 +168,7 @@ class StreamingService : Service() {
     /**
      * Stop streaming
      */
-    private fun stopStreaming() {
+    fun stopStreaming() {
         if (!isStreaming) return
 
         Log.i(TAG, "Stopping streaming")
@@ -199,10 +177,6 @@ class StreamingService : Service() {
             // Stop streaming server
             streamingServer?.stopServer()
             streamingServer = null
-
-            // Close AR session
-            arCoreManager?.close()
-            arCoreManager = null
 
             // Mark as not streaming
             isStreaming = false
@@ -213,6 +187,13 @@ class StreamingService : Service() {
         } catch (e: Exception) {
             Log.e(TAG, "Error stopping streaming: ${e.message}", e)
         }
+    }
+
+    /**
+     * Create analyzer for image processing
+     */
+    fun createImageAnalyzer(): ImageAnalysis.Analyzer? {
+        return streamingServer?.createFrameProcessor()
     }
 
     /**
@@ -247,9 +228,9 @@ class StreamingService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.notification_streaming))
             .setContentText(getNotificationText())
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // Using Android system icon instead of missing resource
+            .setSmallIcon(R.drawable.ic_video_only)
             .setContentIntent(pendingIntent)
-            .addAction(android.R.drawable.ic_media_pause, getString(R.string.action_stop), stopIntent) // Using Android system icon
+            .addAction(android.R.drawable.ic_media_pause, getString(R.string.action_stop), stopIntent)
             .setOngoing(true)
             .build()
     }
